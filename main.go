@@ -8,7 +8,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -81,8 +80,8 @@ func main() {
 
 	startBlockTime, latestBlockTime := time.Unix(int64(startBlock.Time()), 0), time.Unix(int64(latestBlock.Time()), 0)
 	report.WriteString("# JuiceboxDAO Gas Reimbursements\n\n")
-	report.WriteString(fmt.Sprintf("From %s to %s\n", startBlockTime.Format(time.RFC1123), latestBlockTime.Format(time.RFC1123)))
-	report.WriteString(fmt.Sprintf("From blocks %s to %s\n\n", startBlockNumber.String(), latestBlock.Number().String()))
+	report.WriteString(fmt.Sprintf("From %s to %s (block %s to block %s)\n\n", startBlockTime.Format(time.RFC1123),
+		latestBlockTime.Format(time.RFC1123), startBlockNumber.String(), latestBlock.Number().String()))
 
 	// The groups of transactions to get, specified by addresses and event topics
 	txGroups := []struct {
@@ -166,8 +165,8 @@ func main() {
 			gasCost := new(big.Int).Mul(receipt.EffectiveGasPrice, new(big.Int).SetUint64(receipt.GasUsed))
 
 			fmted := new(big.Float).Quo(new(big.Float).SetInt(gasCost), new(big.Float).SetInt(big.NewInt(1e18)))
-			reportDetails[from] += fmt.Sprintf("Type: %s\nTxHash: %s\nGas: %s ETH\nBlock: %d\n",
-				txGroup.Label, lg.TxHash.Hex(), fmted.String(), lg.BlockNumber) + strings.Repeat("-", 40)
+			reportDetails[from] += fmt.Sprintf("Type: %s\nTxHash: %s\nGas: %s ETH\nBlock: %d\n\n",
+				txGroup.Label, lg.TxHash.Hex(), fmted.String(), lg.BlockNumber)
 
 			includedTxs[lg.TxHash] = TxInfo{from, gasCost}
 		}
@@ -184,11 +183,11 @@ func main() {
 
 	// Finish the report
 	for k, v := range reportDetails {
-		report.WriteString("## Summary for " + k.Hex() + "\n")
+		report.WriteString("## Summary for " + k.Hex() + "\n\n")
 
 		fmted := new(big.Float).Quo(new(big.Float).SetInt(totals[k]), new(big.Float).SetInt(big.NewInt(1e18)))
-		report.WriteString("Total gas to reimburse: " + fmted.String() + " ETH\n")
-		report.WriteString("### Transactions\n")
+		report.WriteString("Total gas to reimburse: " + fmted.String() + " ETH\n\n")
+		report.WriteString("### Transactions\n\n")
 		report.WriteString(v)
 	}
 
