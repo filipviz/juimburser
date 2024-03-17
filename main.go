@@ -163,10 +163,11 @@ func main() {
 
 			// get the actual gas used
 			gasCost := new(big.Int).Mul(receipt.EffectiveGasPrice, new(big.Int).SetUint64(receipt.GasUsed))
-
 			fmted := new(big.Float).Quo(new(big.Float).SetInt(gasCost), new(big.Float).SetInt(big.NewInt(1e18)))
-			reportDetails[from] += fmt.Sprintf("Type: %s\nTxHash: %s\nGas: %s ETH\nBlock: %d\n\n",
-				txGroup.Label, lg.TxHash.Hex(), fmted.String(), lg.BlockNumber)
+
+			reportDetails[from] += fmt.Sprintf("Type: %s", txGroup.Label) +
+				fmt.Sprintf("\nTxHash: [`%s`](https://etherscan.io/tx/%s)", lg.TxHash.Hex(), lg.TxHash.Hex()) +
+				fmt.Sprintf("\nGas: %s ETH\nBlock: %d\n\n", fmted.String(), lg.BlockNumber)
 
 			includedTxs[lg.TxHash] = TxInfo{from, gasCost}
 		}
@@ -183,7 +184,7 @@ func main() {
 
 	// Finish the report
 	for k, v := range reportDetails {
-		report.WriteString("## Summary for " + k.Hex() + "\n\n")
+		report.WriteString(fmt.Sprintf("## Summary for [`%s`](https://etherscan.io/address/%s)\n\n", k.Hex(), k.Hex()))
 
 		fmted := new(big.Float).Quo(new(big.Float).SetInt(totals[k]), new(big.Float).SetInt(big.NewInt(1e18)))
 		report.WriteString("Total gas to reimburse: " + fmted.String() + " ETH\n\n")
